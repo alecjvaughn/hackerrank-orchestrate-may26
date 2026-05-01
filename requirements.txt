@@ -1,4 +1,7 @@
 pandas
 python-dotenv
-google-generativeai
+google-genai
 rank_bm25
+pymongo[srv]
+pytest
+google-cloud-firestore
