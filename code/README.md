@@ -26,8 +26,8 @@ We are treating the provided sample data as a contract to iteratively build and 
 - [x] Plan MongoDB schemas for the `knowledge_base` and `test_ground_truth`.
 
 ### 3. Minimal Knowledge Ingestion
-- [ ] Process only `data/*/index.md` files.
-- [ ] Generate embeddings using `text-embedding-004` and upload to MongoDB Atlas.
+- [x] Process only `data/*/index.md` files.
+- [x] Generate embeddings using `gemini-embedding-2` and upload to MongoDB Atlas.
 
 ### 4. Queue Initialization
 - [ ] Write unredacted sample tickets to MongoDB `test_ground_truth`.
@@ -53,10 +53,11 @@ We are treating the provided sample data as a contract to iteratively build and 
 ## Infrastructure Status
 - **MongoDB Atlas:** Connected & Verified (I/O tested).
 - **GCP Firestore:** Connected & Verified (I/O tested).
-- **Gemini 2.5 Flash:** Connected & Verified (Ping tested).
+- **Gemini (Embedding & Chat):** Connected & Verified (Quota/Usage tested).
 
 ---
 
 ## Getting Started
 1. **Activate Environment:** `source venv/bin/activate`
 2. **Run Connection Tests:** `pytest code/tests/test_data_io.py -v -s`
+3. **Ingest Core Corpus:** `python code/ingest.py --mode minimal`
