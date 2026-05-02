@@ -2,6 +2,7 @@ import os
 import pytest
 from pymongo import MongoClient
 from google.cloud import firestore
+from google import genai
 from dotenv import load_dotenv
 
 # Path to .env.local
@@ -96,8 +97,69 @@ def test_firestore_data_io():
     except Exception as e:
         pytest.fail(f"Firestore data I/O failed: {e}")
 
+def test_gemini_embedding_io():
+    """
+    Verifies that we can connect to the Gemini model and generate an embedding.
+    Uses models/gemini-embedding-2.
+    """
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        pytest.skip("GOOGLE_API_KEY not found in environment.")
+    
+    try:
+        client = genai.Client(api_key=api_key)
+        model_name = 'gemini-embedding-2'
+        response = client.models.embed_content(
+            model=model_name,
+            contents="ping"
+        )
+        assert response.embeddings is not None, "Model returned no embeddings"
+        embedding = response.embeddings[0].values
+        dims = len(embedding)
+        
+        print("\n\n--- [PHASE 2] GEMINI EMBEDDING VALIDATION ---")
+        print(f"Gemini embedding generated successfully using {model_name}!")
+        print(f"Dimensions: {dims}")
+        
+        # Free tier limit reminder
+        RPD_LIMIT = 1500 
+        print(f"Capacity Estimate: Approx. {RPD_LIMIT:,} sessions/day (Google Free Tier limit).")
+    except Exception as e:
+        pytest.fail(f"Gemini embedding generation failed: {e}")
+
+def test_gemini_chat_io():
+    """
+    Verifies that we can connect to the Gemini model and perform a simple ping/chat.
+    Also prints the token usage metadata.
+    """
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        pytest.skip("GOOGLE_API_KEY not found in environment.")
+    
+    try:
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents="ping"
+        )
+        assert response.text is not None, "Model returned empty response"
+        
+        print("\n\n--- [PHASE 2] GEMINI CHAT VALIDATION ---")
+        print(f"Gemini response: {response.text.strip()}")
+        
+        # Token usage reporting
+        usage = response.usage_metadata
+        print(f"Usage: {usage.prompt_token_count} input, {usage.candidates_token_count} output tokens.")
+        
+        RPD_LIMIT = 1500 
+        print(f"Capacity Estimate: Approx. {RPD_LIMIT:,} sessions/day (Google Free Tier limit).")
+    except Exception as e:
+        pytest.fail(f"Gemini chat generation failed: {e}")
+
 if __name__ == "__main__":
     # Manual run support
     load_dotenv(ENV_PATH)
     test_mongodb_data_io()
     test_firestore_data_io()
+    test_gemini_embedding_io()
+    test_gemini_chat_io()
