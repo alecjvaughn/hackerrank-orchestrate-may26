@@ -1,134 +1,90 @@
-# HackerRank Orchestrate
+# HackerRank Orchestrate: Support Triage Agent
 
-Starter repository for the **HackerRank Orchestrate** 24-hour hackathon (May 1–2, 2026).
-
-Build a terminal-based AI agent that triages real support tickets across three product ecosystems; **HackerRank**, **Claude**, and **Visa** — using only the support corpus shipped in this repo.
-
-Read [`problem_statement.md`](./problem_statement.md) for the full task spec, input/output schema, and allowed values, and [`evalutation_criteria.md`](./evalutation_criteria.md) for how submissions are scored.
+## Project Overview
+This project builds an AI-driven, terminal-based support triage agent designed to handle support tickets across three major ecosystems: **HackerRank**, **Claude (Anthropic)**, and **Visa**. The agent uses a Retrieval-Augmented Generation (RAG) architecture to provide grounded, accurate responses based strictly on the provided support corpus.
 
 ---
 
-## Contents
-
-1. [Repository layout](#repository-layout)
-2. [What you need to build](#what-you-need-to-build)
-3. [Where your code goes](#where-your-code-goes)
-4. [Quickstart](#quickstart)
-5. [Chat transcript logging](#chat-transcript-logging)
-6. [Submission](#submission)
-7. [Judge interview](#judge-interview)
-8. [Evaluation criteria](#evaluation-criteria)
+## Agentic Architecture
+We employ a multi-agent separation of concerns to ensure high reliability and compliance with evaluation criteria:
+- **Triage Agent:** Classifies the `product_area` and `request_type`.
+- **Retrieval Agent:** Formulates search queries and fetches grounded context from the MongoDB Vector Store.
+- **Responder Agent:** Drafts professional responses and justifies the decision to either `reply` or `escalate`.
 
 ---
 
-## Repository layout
+## Current Execution Plan (TDD Contract)
 
-```
-.
-├── AGENTS.md                       # Rules for AI coding tools + transcript logging
-├── problem_statement.md            # Full task description and I/O schema
-├── README.md                       # You are here
-├── code/                           # ← Build your agent here
-│   └── main.py                     #   Entry point (rename/extend as you like)
-├── data/                           # Local-only support corpus (no network needed)
-│   ├── hackerrank/                 #   HackerRank help center
-│   ├── claude/                     #   Claude Help Center export
-│   └── visa/                       #   Visa consumer + small-business support
-└── support_tickets/
-    ├── sample_support_tickets.csv  # Inputs + expected outputs (for development)
-    ├── support_tickets.csv         # Inputs only (run your agent on these)
-    └── output.csv                  # Write your agent's predictions here
-```
+We are treating the provided sample data as a contract to iteratively build and verify the pipeline.
 
----
+### 1. Agentic Design & Prompting
+- [x] Read `evaluation_criteria.md` and `problem_statement.md`.
+- [x] Define system prompts for Triage, Retrieval, and Responder agents.
 
-## What you need to build
+### 2. Schema & Chunking Strategy
+- [x] Plan filterable Firestore schemas for the `triage_queue` (strictly using `output.csv` field names).
+- [x] Plan MongoDB schemas for the `knowledge_base` and `test_ground_truth`.
 
-A terminal-based agent that, for each row in `support_tickets/support_tickets.csv`, produces:
+### 3. Minimal Knowledge Ingestion
+- [x] Process only `data/*/index.md` files.
+- [x] Generate embeddings using `gemini-embedding-2` and upload to MongoDB Atlas.
 
-| Column         | Allowed values                                          |
-| -------------- | ------------------------------------------------------- |
-| `status`       | `replied`, `escalated`                                  |
-| `product_area` | most relevant support category / domain area            |
-| `response`     | user-facing answer grounded in the provided corpus      |
-| `justification`| concise explanation of the routing/answering decision   |
-| `request_type` | `product_issue`, `feature_request`, `bug`, `invalid`    |
+### 4. Queue Initialization
+- [x] Write unredacted sample tickets to MongoDB `test_ground_truth`.
+- [x] Write redacted sample tickets (Issue, Subject, Company only) to Firestore `triage_queue`.
 
-Hard requirements (from `problem_statement.md`):
+### 5. Automated Triage (Agent Iteration 1)
+- [x] Process the redacted queue to predict `product_area` and `request_type`.
+- [x] Ground triage in the MongoDB vector store.
+- [x] Verify accuracy using embedding closeness (cosine similarity threshold 0.75).
 
-- Must be **terminal-based**.
-- Must use **only the provided support corpus** (no live web calls for ground-truth answers).
-- Must **escalate** high-risk, sensitive, or unsupported cases instead of guessing.
-- Must avoid hallucinated policies or unsupported claims.
+### 6. Output Generation
+- [x] Compile processed results into `support_tickets/test_predictions.csv`.
 
-Beyond that you are free to bring your own approach — RAG, vector DBs, tool use, structured output, agent frameworks, classical ML, or anything else.
+### 7. Full Pipeline Evaluation
+- [x] Integrate Retrieval and Responder agents.
+- [x] Verify full output (including response and justification) using embedding closeness.
+
+### 8. Console App & Production
+- [x] Implement terminal-based navigation and UI.
+- [ ] Process the remaining production support tickets into `support_tickets/support_tickets.csv`.
 
 ---
 
-## Where your code goes
+## Running the UI Test (QAS Mode)
+The UI features a **QAS Mode** designed specifically for administrators to verify the application's functionality using clean sample data, isolated from production.
 
-All of your work belongs in [`code/`](./code/). The repo ships with an empty `code/main.py` you can grow into your full agent — add more modules (`agent.py`, `retriever.py`, `classifier.py`, etc.) next to it as needed.
-
-Conventions:
-
-- Put a **README inside `code/`** describing how to install dependencies and run your agent.
-- Read secrets **from environment variables only** (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, …). Copy `.env.example` → `.env` (already gitignored) if you keep one. **Never hardcode keys.**
-- Be **deterministic** where possible. Seed any random sampling.
-- Write responses to `support_tickets/output.csv`.
-
----
-
-## Quickstart
-
-Clone this repository:
-
-```bash
-git clone git@github.com:interviewstreet/hackerrank-orchestrate-may26.git
-cd hackerrank-orchestrate-may26
-```
-
-You are free to use any language or runtime. We recommend **Python**, **JavaScript**, or **TypeScript**.
+1.  **Activate your environment:**
+    ```bash
+    source venv/bin/activate
+    ```
+2.  **Launch the App in QAS mode:**
+    ```bash
+    python code/app.py --qas
+    ```
+3.  **Run the Setup Wizard:**
+    Upon startup, the app will ask: *"Would you like to run the QAS Setup Wizard?"*.
+    - Select **`y`**.
+    - The wizard will automatically:
+        1.  **Re-initialize** your QAS Firestore queue with fresh sample tickets.
+        2.  **Ingest** the core knowledge base (index files) into MongoDB.
+        3.  **Process** the entire sample queue through the full multi-agent pipeline.
+4.  **Explore the Dashboard:**
+    Once the wizard finishes, you will enter the main dashboard where you can view triaged tickets, edit fields manually, or sync more from the sample CSV.
 
 ---
 
-## Chat transcript logging
-
-This repo ships with an `AGENTS.md` that any modern AI coding tool (Cursor, Claude Code, Codex, Gemini CLI, Copilot, etc.) will read. It instructs the tool to append every conversation turn to a single shared log file:
-
-| Platform       | Path                                              |
-| -------------- | ------------------------------------------------- |
-| macOS / Linux  | `$HOME/hackerrank_orchestrate/log.txt`            |
-| Windows        | `%USERPROFILE%\hackerrank_orchestrate\log.txt`    |
-
-You don't need to do anything to enable it — just use your AI tool normally. You'll upload this `log.txt` as your chat transcript at submission time.
+## Infrastructure Status
+- **MongoDB Atlas:** Connected & Verified (I/O tested).
+- **GCP Firestore:** Connected & Verified (I/O tested).
+- **Gemini (Embedding & Chat):** Connected & Verified (Quota/Usage tested).
 
 ---
 
-## Submission
-
-Submit on the HackerRank Community Platform:
-<https://www.hackerrank.com/contests/hackerrank-orchestrate-may26/challenges/support-agent/submission>
-
-You will upload **three** files:
-
-1. **Code zip** — zip your `code/` directory and upload it. Exclude virtualenvs, `node_modules`, build artifacts, the `data/` corpus, and the `support_tickets/` CSVs.
-2. **Predictions CSV** — your agent's output for `support_tickets/support_tickets.csv` (i.e. the populated `output.csv`).
-3. **Chat transcript** — the `log.txt` from the path in [Chat transcript logging](#chat-transcript-logging).
-
----
-
-## Judge interview
-
-After a successful submission, your AI Judge interview will happen within a few hours after the hackathon ends. It will stay open for the next 4 hours. 
-
-The AI Judge will have access to your submission and may ask about your approach, decisions, and how you used AI while building your solution. The interview will be 30 minutes long, and keeping your camera on is mandatory.
-
-Results will be announced on May 15, 2026
-
----
-
-## Evaluation criteria
-
-Submissions are scored across four dimensions: agent design (your `code/`), the AI Judge interview, output accuracy on `support_tickets/output.csv`, and AI fluency from your chat transcript.
-
-See [`evalutation_criteria.md`](./evalutation_criteria.md) for the full rubric.
+## Getting Started
+1. **Activate Environment:** `source venv/bin/activate`
+2. **Run Connection Tests:** `pytest code/tests/test_data_io.py -v -s`
+3. **Ingest Core Corpus:** `python code/ingest.py --mode minimal`
+4. **Initialize Test Queue:** `python code/init_queue.py --mode test`
+5. **Run Pipeline Test:** `pytest code/tests/test_pipeline.py -v -s`
+6. **Generate Test Output:** `python code/main.py --action output --mode test`
