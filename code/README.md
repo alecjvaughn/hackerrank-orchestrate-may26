@@ -46,8 +46,31 @@ We are treating the provided sample data as a contract to iteratively build and 
 - [x] Verify full output (including response and justification) using embedding closeness.
 
 ### 8. Console App & Production
-- [ ] Implement terminal-based navigation and UI.
+- [x] Implement terminal-based navigation and UI.
 - [ ] Process the remaining production support tickets into `support_tickets/support_tickets.csv`.
+
+---
+
+## Running the UI Test (QAS Mode)
+The UI features a **QAS Mode** designed specifically for administrators to verify the application's functionality using clean sample data, isolated from production.
+
+1.  **Activate your environment:**
+    ```bash
+    source venv/bin/activate
+    ```
+2.  **Launch the App in QAS mode:**
+    ```bash
+    python code/app.py --qas
+    ```
+3.  **Run the Setup Wizard:**
+    Upon startup, the app will ask: *"Would you like to run the QAS Setup Wizard?"*.
+    - Select **`y`**.
+    - The wizard will automatically:
+        1.  **Re-initialize** your QAS Firestore queue with fresh sample tickets.
+        2.  **Ingest** the core knowledge base (index files) into MongoDB.
+        3.  **Process** the entire sample queue through the full multi-agent pipeline.
+4.  **Explore the Dashboard:**
+    Once the wizard finishes, you will enter the main dashboard where you can view triaged tickets, edit fields manually, or sync more from the sample CSV.
 
 ---
 

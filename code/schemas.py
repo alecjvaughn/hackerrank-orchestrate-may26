@@ -39,14 +39,17 @@ class TriageQueueTicket(BaseModel):
     Schema for the queue processed by the agentic pipeline.
     Strictly using the original field names from output.csv.
     Fields after 'company' are redacted initially.
+    
+    Filterable fields: company, product_area, status, request_type, ticket_state
     """
     ticket_id: str
     issue: str
     subject: str
     company: str
     
-    # Feature flag for queue filtering
-    processed: bool = False
+    # State management: PENDING, PROCESSED, ESCALATED, ARCHIVED
+    # Only PENDING and ARCHIVED states are permitted to have empty agent fields.
+    ticket_state: str = "PENDING"
     
     # Agent Outputs
     product_area: Optional[str] = None
