@@ -99,12 +99,13 @@ def test_firestore_data_io():
 
 def test_gemini_embedding_io():
     """
-    Verifies that we can connect to the Gemini model and generate an embedding.
-    Uses models/gemini-embedding-2.
+    Verifies that we can connect to the Gemini model, generate an embedding,
+    write it to MongoDB, wait for user validation, and then delete it.
     """
     api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        pytest.skip("GOOGLE_API_KEY not found in environment.")
+    mongo_uri = os.getenv("MONGO_URI")
+    if not api_key or not mongo_uri:
+        pytest.skip("GOOGLE_API_KEY or MONGO_URI not found in environment.")
     
     try:
         client = genai.Client(api_key=api_key)
@@ -117,15 +118,33 @@ def test_gemini_embedding_io():
         embedding = response.embeddings[0].values
         dims = len(embedding)
         
+        # Write to MongoDB
+        mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = mongo_client["test_database_io"]
+        collection = db["test_collection_io"]
+        
+        test_data = {"phase": 2, "test_key": "embedding_test", "embedding": embedding}
+        result = collection.insert_one(test_data)
+        doc_id = result.inserted_id
+        
         print("\n\n--- [PHASE 2] GEMINI EMBEDDING VALIDATION ---")
         print(f"Gemini embedding generated successfully using {model_name}!")
         print(f"Dimensions: {dims}")
+        print(f"Embedding written to: test_database_io.test_collection_io")
+        print(f"Document ID: {doc_id}")
+        print("Check MongoDB Atlas: https://cloud.mongodb.com/v2#/clusters")
         
         # Free tier limit reminder
         RPD_LIMIT = 1500 
         print(f"Capacity Estimate: Approx. {RPD_LIMIT:,} sessions/day (Google Free Tier limit).")
+        
+        input("Press Enter to approve deletion and clean up...")
+        
+        # Cleanup
+        collection.delete_one({"_id": doc_id})
+        print("Embedding document cleanup successful!")
     except Exception as e:
-        pytest.fail(f"Gemini embedding generation failed: {e}")
+        pytest.fail(f"Gemini embedding data I/O failed: {e}")
 
 def test_gemini_chat_io():
     """
