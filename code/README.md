@@ -7,7 +7,7 @@ This project builds an AI-driven, terminal-based support triage agent designed t
 
 ## Agentic Architecture
 We employ a multi-agent separation of concerns to ensure high reliability and compliance with evaluation criteria:
-- **Triage Agent:** Classifies the `Product Area` and `Request Type`.
+- **Triage Agent:** Classifies the `product_area` and `request_type`.
 - **Retrieval Agent:** Formulates search queries and fetches grounded context from the MongoDB Vector Store.
 - **Responder Agent:** Drafts professional responses and justifies the decision to either `reply` or `escalate`.
 
@@ -22,7 +22,7 @@ We are treating the provided sample data as a contract to iteratively build and 
 - [x] Define system prompts for Triage, Retrieval, and Responder agents.
 
 ### 2. Schema & Chunking Strategy
-- [x] Plan filterable Firestore schemas for the `triage_queue` (with feature flags and confidence arrays).
+- [x] Plan filterable Firestore schemas for the `triage_queue` (strictly using `output.csv` field names).
 - [x] Plan MongoDB schemas for the `knowledge_base` and `test_ground_truth`.
 
 ### 3. Minimal Knowledge Ingestion
@@ -33,20 +33,21 @@ We are treating the provided sample data as a contract to iteratively build and 
 - [x] Write unredacted sample tickets to MongoDB `test_ground_truth`.
 - [x] Write redacted sample tickets (Issue, Subject, Company only) to Firestore `triage_queue`.
 
-### 5. Automated Triage (Phase 2 Tests)
-- [ ] Process the redacted queue to predict `Product Area` and calculate confidence scores.
-- [ ] Use MongoDB vector store for grounding.
+### 5. Automated Triage (Agent Iteration 1)
+- [x] Process the redacted queue to predict `product_area` and `request_type`.
+- [x] Ground triage in the MongoDB vector store.
+- [x] Verify accuracy using embedding closeness (cosine similarity threshold 0.75).
 
 ### 6. Output Generation
-- [ ] Compile processed results into a test `output.csv`.
+- [x] Compile processed results into `support_tickets/test_predictions.csv`.
 
-### 7. Evaluation & Comparison
-- [ ] Compare predictions against MongoDB ground truth.
-- [ ] Iterate on prompts and retrieval logic until accuracy targets are met.
+### 7. Full Pipeline Evaluation
+- [x] Integrate Retrieval and Responder agents.
+- [x] Verify full output (including response and justification) using embedding closeness.
 
 ### 8. Console App & Production
 - [ ] Implement terminal-based navigation and UI.
-- [ ] Process the remaining production support tickets.
+- [ ] Process the remaining production support tickets into `support_tickets/support_tickets.csv`.
 
 ---
 
@@ -62,3 +63,5 @@ We are treating the provided sample data as a contract to iteratively build and 
 2. **Run Connection Tests:** `pytest code/tests/test_data_io.py -v -s`
 3. **Ingest Core Corpus:** `python code/ingest.py --mode minimal`
 4. **Initialize Test Queue:** `python code/init_queue.py --mode test`
+5. **Run Pipeline Test:** `pytest code/tests/test_pipeline.py -v -s`
+6. **Generate Test Output:** `python code/main.py --action output --mode test`

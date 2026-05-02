@@ -13,22 +13,22 @@ class KnowledgeBaseChunk(BaseModel):
     file_path: str
     chunk_index: int
     content: str
-    embedding: List[float]  # Vector embedding from text-embedding-004
+    embedding: List[float]  # Vector embedding from gemini-embedding-2
 
 class GroundTruthTicket(BaseModel):
     """
     Schema for the unredacted original support tickets, 
-    used to calculate accuracy during the TDD loop.
+    strictly using the field names from output.csv.
     """
     ticket_id: str = Field(alias="_id")
     issue: str
     subject: str
     company: str
-    expected_response: str
-    expected_product_area: str
-    expected_status: str
-    expected_request_type: str
-    expected_justification: str
+    response: str
+    product_area: str
+    status: str
+    request_type: str
+    justification: str
 
 # ==========================================
 # Google Cloud Firestore Schemas
@@ -37,6 +37,7 @@ class GroundTruthTicket(BaseModel):
 class TriageQueueTicket(BaseModel):
     """
     Schema for the queue processed by the agentic pipeline.
+    Strictly using the original field names from output.csv.
     Fields after 'company' are redacted initially.
     """
     ticket_id: str
@@ -48,11 +49,8 @@ class TriageQueueTicket(BaseModel):
     processed: bool = False
     
     # Agent Outputs
-    predicted_product_area: Optional[str] = None
-    # Array storing [triage_conf, retrieval_conf, gen_conf]
-    confidence_scores: List[float] = Field(default_factory=list)
-    
-    predicted_status: Optional[str] = None
-    predicted_request_type: Optional[str] = None
-    predicted_response: Optional[str] = None
+    product_area: Optional[str] = None
+    status: Optional[str] = None
+    request_type: Optional[str] = None
+    response: Optional[str] = None
     justification: Optional[str] = None

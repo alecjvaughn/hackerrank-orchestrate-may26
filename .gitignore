@@ -30,5 +30,6 @@ Thumbs.db
 # local data / caches the participant may create
 data/index/
 data/embeddings/
+logs/
 *.sqlite
 *.db

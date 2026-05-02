@@ -63,6 +63,7 @@ def test_init_queue_integration(mongo_client, firestore_client):
     """
     Integration test: Verifies that initialize_queues(mode='test') 
     actually populates MongoDB and Firestore with real data.
+    Strictly uses strict field names.
     LEAVES the data intact for the next phase.
     """
     # 1. Run initialization
@@ -76,8 +77,13 @@ def test_init_queue_integration(mongo_client, firestore_client):
     assert truth_count == 10, f"Expected 10 ground truth records, found {truth_count}"
     
     sample_mongo = col_truth.find_one()
-    assert "expected_response" in sample_mongo
-    assert len(sample_mongo["expected_response"]) > 0
+    # Verification of strict field names
+    assert "response" in sample_mongo
+    assert "product_area" in sample_mongo
+    assert "status" in sample_mongo
+    assert "request_type" in sample_mongo
+    assert "justification" in sample_mongo
+    assert len(sample_mongo["response"]) > 0
     
     # 3. Verify Firestore Redacted Queue
     col_queue = firestore_client.collection("triage_queue")
@@ -88,14 +94,15 @@ def test_init_queue_integration(mongo_client, firestore_client):
     assert "issue" in sample_fs
     assert "subject" in sample_fs
     # Verification of Redaction
-    assert "expected_response" not in sample_fs
-    assert "Response" not in sample_fs
-    assert "Status" not in sample_fs
-    assert "Product Area" not in sample_fs
+    assert "response" not in sample_fs
+    assert "product_area" not in sample_fs
+    assert "status" not in sample_fs
+    assert "request_type" not in sample_fs
+    assert "justification" not in sample_fs
     
     # 4. User Verification Pause
     print("\n\n--- INTEGRATION VERIFICATION ---")
-    print("Real data has been initialized in your databases.")
+    print("Real data has been initialized in your databases using strict schemas.")
     print("This data is REQUIRED for the next phase. It will NOT be deleted.")
     print("Check MongoDB Atlas (Unredacted): https://cloud.mongodb.com/v2#/clusters")
     print("Check Firestore Console (Redacted): https://console.cloud.google.com/firestore")

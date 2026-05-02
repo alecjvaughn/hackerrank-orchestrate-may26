@@ -22,6 +22,7 @@ def destroy_ground_truth(mongo_client, collection_name="test_ground_truth"):
 def create_ground_truth(mongo_client, df, collection_name="test_ground_truth"):
     """
     Populates the collection in MongoDB with unredacted data.
+    Strictly uses the field names from output.csv.
     """
     print(f"Creating MongoDB ground truth data in {collection_name}...")
     db = mongo_client["support_triage"]
@@ -29,17 +30,17 @@ def create_ground_truth(mongo_client, df, collection_name="test_ground_truth"):
     
     mongo_docs = []
     for _, row in df.iterrows():
-        # Note: mapping 'Justification' to empty string if missing from CSV
+        # Strictly use output.csv field names
         truth_doc = {
             "_id": str(row.get("_ticket_id")),
             "issue": str(row.get("Issue", "")),
             "subject": str(row.get("Subject", "")),
             "company": str(row.get("Company", "")),
-            "expected_response": str(row.get("Response", "")),
-            "expected_product_area": str(row.get("Product Area", "")),
-            "expected_status": str(row.get("Status", "")),
-            "expected_request_type": str(row.get("Request Type", "")),
-            "expected_justification": str(row.get("Justification", "")) 
+            "response": str(row.get("Response", "")),
+            "product_area": str(row.get("Product Area", "")),
+            "status": str(row.get("Status", "")),
+            "request_type": str(row.get("Request Type", "")),
+            "justification": str(row.get("Justification", "")) 
         }
         mongo_docs.append(truth_doc)
         

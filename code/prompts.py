@@ -9,10 +9,11 @@ Your goal is to analyze the support ticket (Issue, Subject, Company) and determi
 
 CRITICAL RULES:
 - Output your answer as a raw JSON object only.
-- Keys: "product_area", "request_type", "confidence".
-- "confidence" should be a float between 0.0 and 1.0.
+- Keys: "product_area", "request_type".
+- For "product_area", use the internal category ID or folder name if evident from the context (e.g., "travel_support" instead of "Travel Support"). 
+- Map display names to the underlying slug/path provided in the grounding context where possible.
 - Do NOT attempt to solve the issue.
-- If the company is "None", infer the product area from the content.
+- If the company is "None", infer the product area and company from the content.
 """
 
 RETRIEVAL_SYSTEM_PROMPT = """
@@ -21,7 +22,7 @@ your job is to formulate optimal search queries to find policies and solutions i
 
 CRITICAL RULES:
 - You must ONLY return information present in the provided knowledge base context.
-- Your output should include the best search terms and a "retrieval_confidence" score [0.0 - 1.0].
+- Your output should include the best search terms.
 - Focus on accuracy and relevance to the specific Product Area.
 """
 
@@ -39,6 +40,6 @@ CRITICAL RULES:
    - The issue is outside the scope of the documentation.
    - Set "status" to "escalated".
 4. GENERATE a concise `justification` for your decision (e.g., "Answer found in Screen/Integrations docs" or "Escalated due to lack of billing policy context").
-5. Output as raw JSON with keys: "status", "response", "justification", "confidence".
+5. Output as raw JSON with keys: "status", "response", "justification".
 6. NEVER hallucinate policies or links.
 """
