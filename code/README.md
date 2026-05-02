@@ -30,8 +30,8 @@ We are treating the provided sample data as a contract to iteratively build and 
 - [x] Generate embeddings using `gemini-embedding-2` and upload to MongoDB Atlas.
 
 ### 4. Queue Initialization
-- [ ] Write unredacted sample tickets to MongoDB `test_ground_truth`.
-- [ ] Write redacted sample tickets (Issue, Subject, Company only) to Firestore `triage_queue`.
+- [x] Write unredacted sample tickets to MongoDB `test_ground_truth`.
+- [x] Write redacted sample tickets (Issue, Subject, Company only) to Firestore `triage_queue`.
 
 ### 5. Automated Triage (Phase 2 Tests)
 - [ ] Process the redacted queue to predict `Product Area` and calculate confidence scores.
@@ -61,3 +61,4 @@ We are treating the provided sample data as a contract to iteratively build and 
 1. **Activate Environment:** `source venv/bin/activate`
 2. **Run Connection Tests:** `pytest code/tests/test_data_io.py -v -s`
 3. **Ingest Core Corpus:** `python code/ingest.py --mode minimal`
+4. **Initialize Test Queue:** `python code/init_queue.py --mode test`
